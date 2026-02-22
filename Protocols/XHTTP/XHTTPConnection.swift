@@ -381,14 +381,14 @@ class XHTTPConnection {
         }
         requestData.append(data)
 
-        uploadSend(requestData) { error in
+        uploadSend(requestData) { [weak self] error in
             if let error {
                 completion(error)
                 return
             }
 
             // Read the 200 OK response
-            self.readPostResponse(uploadReceive: uploadReceive, buffer: Data(), completion: completion)
+            self?.readPostResponse(uploadReceive: uploadReceive, buffer: Data(), completion: completion)
         }
     }
 
@@ -1081,7 +1081,7 @@ struct ChunkedTransferDecoder {
             _isFinished = true
             // Consume "0\r\n\r\n" (the trailing CRLF after the zero chunk)
             let termEnd = crlfRange.upperBound
-            if buffer.count >= termEnd + 2 {
+            if buffer.endIndex >= termEnd + 2 {
                 buffer.removeFirst(termEnd + 2 - buffer.startIndex)
             } else {
                 buffer.removeAll()
@@ -1092,7 +1092,7 @@ struct ChunkedTransferDecoder {
         // Check if we have the full chunk data + trailing \r\n
         let dataStart = crlfRange.upperBound
         let needed = dataStart + Int(chunkSize) + 2 // chunk data + \r\n
-        guard buffer.count >= needed else {
+        guard buffer.endIndex >= needed else {
             return nil // Need more data
         }
 
